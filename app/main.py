@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from mangum import Mangum
 
 from .predictor import load_models, run_prediction, validate_models
 from .schemas import PredictionRequest, PredictionResponse
@@ -29,3 +30,6 @@ def health():
 @app.post("/predict", response_model=PredictionResponse)
 def predict(request: PredictionRequest) -> PredictionResponse:
     return run_prediction(request)
+
+
+handler = Mangum(app)
