@@ -150,6 +150,31 @@ def _build_features(req: PredictionRequest) -> tuple[dict[str, float], bool]:
     return features, hindcast_used
 
 
+def validate_models() -> None:
+    dummy = PredictionRequest(
+        wave_height_max_m=0.5,
+        wave_height_mean_m=0.3,
+        wave_period_mean_s=10.0,
+        wave_direction_deg=270.0,
+        wind_speed_ms=3.0,
+        wind_gust_ms=5.0,
+        wind_dir_mean_deg=270.0,
+        tide_max_m=1.0,
+        tide_mean_m=0.5,
+    )
+    result = run_prediction(dummy)
+
+    if not math.isfinite(result.visibility_feet):
+        raise RuntimeError(f"Regression model returned non-finite value: {result.visibility_feet}")
+
+    if not (0.0 <= result.go_probability <= 1.0):
+        raise RuntimeError(f"Binary model returned out-of-range probability: {result.go_probability}")
+
+    prob_sum = sum(result.condition_probabilities.values())
+    if not (0.99 <= prob_sum <= 1.01):
+        raise RuntimeError(f"4-class model probabilities do not sum to 1.0: {prob_sum:.4f}")
+
+
 def run_prediction(req: PredictionRequest) -> PredictionResponse:
     features, hindcast_used = _build_features(req)
 
