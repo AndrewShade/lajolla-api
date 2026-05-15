@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from .predictor import load_models, run_prediction
+from .predictor import load_models, run_prediction, validate_models
 from .schemas import PredictionRequest, PredictionResponse
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     load_models()
+    validate_models()
     yield
 
 
